@@ -1,13 +1,14 @@
 #include <Arduino.h>
 
 #include <Ticker.h>
-Ticker  tickerLed;
+
 
 /*
 ********************************************************************************
   Led variables
 ********************************************************************************
 */
+Ticker tickerLed;
 int pinLed;
 int indexLed;
 int lenLed;
@@ -26,6 +27,59 @@ void actualizeLed() {
   indexLed++;
 }
 
+/*
+********************************************************************************
+  Clock variables
+********************************************************************************
+*/
+Ticker  tickerClock;
+
+unsigned long elapsedSeconds;
+int seconds;
+int minutes;
+int hours;
+String stime;
+
+void actualizeClock() 
+{
+    elapsedSeconds++;
+    seconds++;
+
+    if (seconds > 59) 
+    {
+        seconds = 0;
+        minutes++;
+        if (minutes > 59) 
+        {
+            minutes = 0;
+            hours++;
+            if (hours > 23) 
+            {
+                hours = 0;
+            }
+        }
+    }
+
+    stime = "";
+    if (hours < 10) 
+    {
+        stime = stime + "0";
+    }
+    stime = stime + String(hours);
+    stime = stime + ":";
+    if (minutes < 10) 
+    {
+        stime = stime + "0";
+    }
+    stime = stime + String(minutes);
+    stime = stime + ":";
+    if (seconds < 10) 
+    {
+        stime = stime + "0";
+    }
+    stime = stime + String(seconds);
+}
+
 void setup() {
   Serial.begin(115200);
   delay(3000);
@@ -41,10 +95,21 @@ void setup() {
 
   tickerLed.attach_ms(120, actualizeLed);
   Serial.println("Led variables        : OK");
+
+  // initialize clock variables
+  elapsedSeconds = 1;
+  seconds = 0;
+  minutes = 0;
+  hours   = 0;
+  stime   = "00:00:00";
+
+  tickerClock.attach(1, actualizeClock);
+  Serial.println("Clock variables      : OK"); 
+
   
 }
 
 void loop() {
- 
+  
 }
 
