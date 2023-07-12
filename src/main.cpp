@@ -80,6 +80,69 @@ void actualizeClock()
     stime = stime + String(seconds);
 }
 
+/*
+********************************************************************************
+  KY040 variables Rotatory encoder
+********************************************************************************
+*/
+#define CLK_PIN 36
+#define DT_PIN  39
+#define SW_PIN  34
+
+int  lastEncoded     = 0;                // Valor anterior del encoder
+bool buttonPressed   = false; 
+bool optionChanged   = false;
+int  counter         = 0; 
+int  optionMin       = 0;
+int  optionMax       = 3;
+int  option          = 0; 
+
+void handleButtonPress() {
+  buttonPressed = true;                  // Marca el botón como presionado
+}
+
+void updateEncoder() {
+  int MSB = digitalRead(CLK_PIN);    
+  int LSB = digitalRead(DT_PIN);       
+  int encoded = (MSB << 1) | LSB;
+  int optionNew;
+
+  if (encoded != lastEncoded) {  // aqui se descartan los siguientes estados Ob1111 Ob0101 b0000 b1010
+    int sum = (lastEncoded << 2) | encoded;
+    if (sum == 0b0011 || sum == 0b0110 || sum == 0b1001 || sum == 0b1100) {
+      // estos estados no son validos, por lo tanto se ignoran
+    }
+    else {
+      if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {
+        // giro a la derecha
+        counter++;
+      }
+      else {
+        // sum == 0b1110 || sum == 0b1000 || sum == 0b0001 || sum == 0b0111
+        // giro a la izquierda
+        counter--;
+      }
+      if (counter % 4 == 0) {
+        optionNew = counter / 4;
+        if (optionNew != option) {
+          option = optionNew;
+          optionChanged = true;
+          if (option < optionMin) { 
+            option = optionMax;
+            counter = optionMax * 4;
+          } 
+          if (option > optionMax){ 
+            option = optionMin;
+            counter = 0;
+          }
+        }
+      }
+      lastEncoded = encoded; 
+    } 
+  }
+  
+}
+
 void setup() {
   Serial.begin(115200);
   delay(3000);
@@ -106,10 +169,29 @@ void setup() {
   tickerClock.attach(1, actualizeClock);
   Serial.println("Clock variables      : OK"); 
 
-  
+  // initialize the rotatory encoder KY40 variables
+  attachInterrupt(digitalPinToInterrupt(CLK_PIN), updateEncoder,     CHANGE); 
+  attachInterrupt(digitalPinToInterrupt(DT_PIN),  updateEncoder,     CHANGE);   
+  attachInterrupt(digitalPinToInterrupt(SW_PIN),  handleButtonPress, FALLING);
+  lastEncoded = digitalRead(CLK_PIN);                     // Lee el estado del pin CLK
+  lastEncoded = (lastEncoded << 1) | digitalRead(DT_PIN); // Combina los estados de CLK y DT en un solo valor
+  counter   = 0;
+  optionMin = 0;
+  optionMax = 3;
+  Serial.println("Rotatory encoder     : OK"); 
 }
 
 void loop() {
-  
+  if (buttonPressed) {
+    Serial.print(stime);
+    Serial.println(" el boton fue presionado");
+    buttonPressed = false;
+  }
+  if (optionChanged) {
+    Serial.print(stime);
+    Serial.print(" ");
+    Serial.println(option);
+    optionChanged = false;
+  }
 }
 
