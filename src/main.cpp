@@ -1,14 +1,27 @@
 #include <Arduino.h>
+/*
+********************************************************************************
+  Performance variables
+********************************************************************************
+*/
+unsigned long cycles;
+unsigned long average;
+String saverage;
 
+/*
+********************************************************************************
+  Time variables
+********************************************************************************
+*/
 #include <Ticker.h>
-
+Ticker tickerLed;
+Ticker tickerClock;
 
 /*
 ********************************************************************************
   Led variables
 ********************************************************************************
 */
-Ticker tickerLed;
 int pinLed;
 int indexLed;
 int lenLed;
@@ -32,8 +45,6 @@ void actualizeLed() {
   Clock variables
 ********************************************************************************
 */
-Ticker  tickerClock;
-
 unsigned long elapsedSeconds;
 int seconds;
 int minutes;
@@ -144,9 +155,15 @@ void updateEncoder() {
 }
 
 void setup() {
+  // initialize Serial Port
   Serial.begin(115200);
   delay(3000);
   Serial.println("Serial               : OK");
+
+  // initialize performance Variables
+  cycles = 0;
+  average = 0;
+  Serial.println("Performance variables: OK");
 
   // initialize led variables
   pinLed = LED_BUILTIN;
@@ -193,5 +210,7 @@ void loop() {
     Serial.println(option);
     optionChanged = false;
   }
+  cycles++;
+  average = cycles / elapsedSeconds;
 }
 
