@@ -92,6 +92,15 @@ void actualizeClock()
 }
 
 /*
+**************************************************************************************************
+  I2C variables
+**************************************************************************************************
+*/
+#define PinSDA 21
+#define PinSCL 22
+#include <Wire.h>
+
+/*
 ********************************************************************************
   KY040 variables Rotatory encoder
 ********************************************************************************
@@ -185,6 +194,10 @@ void setup() {
 
   tickerClock.attach(1, actualizeClock);
   Serial.println("Clock variables      : OK"); 
+
+  //Initialize the I2C bus
+  Wire.begin(PinSDA,PinSCL); 
+  Serial.println("I2C Bus              : OK");
 
   // initialize the rotatory encoder KY40 variables
   attachInterrupt(digitalPinToInterrupt(CLK_PIN), updateEncoder,     CHANGE); 
